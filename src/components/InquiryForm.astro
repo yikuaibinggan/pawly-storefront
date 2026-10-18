@@ -1,0 +1,283 @@
+---
+import { ui } from '../i18n/ui';
+import { products, type Product } from '../data/products';
+import { site, withLang, type Lang } from '../data/site';
+import Icon from './Icon.astro';
+
+interface Props {
+  lang: Lang;
+  variant?: 'general' | 'wholesale';
+  product?: Product;
+  heading?: string;
+  text?: string;
+}
+
+const { lang, variant = 'general', product, heading, text } = Astro.props;
+const t = ui[lang];
+const defaultInterest = variant === 'wholesale' ? 'wholesale' : 'general';
+const subject =
+  variant === 'wholesale' ? `${t.form.subjectPrefix} — ${t.form.wholesaleSubject}` : `${t.form.subjectPrefix} — ${t.form.generalSubject}`;
+const legalHref = withLang(lang, '/legal/');
+---
+
+<form
+  class:list={['inquiry-form', `inquiry-form--${variant}`]}
+  data-inquiry-form
+  data-subject={subject}
+  data-contact={site.email}
+  data-required={t.form.required}
+  data-email-error={t.form.emailError}
+  data-consent-error={t.form.consentError}
+  data-success-title={t.form.successTitle}
+  data-success-text={t.form.successText}
+  novalidate
+>
+  {heading && (
+    <div class="form-heading">
+      <h3>{heading}</h3>
+      {text && <p>{text}</p>}
+    </div>
+  )}
+
+  <div class="form-grid">
+    <label class="field">
+      <span class="field-label">{t.form.name} <span class="required-mark">*</span></span>
+      <input
+        type="text"
+        name="name"
+        autocomplete="name"
+        placeholder={t.form.namePlaceholder}
+        data-label={t.form.labels.name}
+        data-required-field
+        required
+      />
+      <span class="field-error" data-error-for="name"></span>
+    </label>
+
+    <label class="field">
+      <span class="field-label">{t.form.companyOptional}</span>
+      <input
+        type="text"
+        name="company"
+        autocomplete="organization"
+        placeholder={t.form.companyPlaceholder}
+        data-label={t.form.labels.company}
+      />
+    </label>
+
+    <label class="field">
+      <span class="field-label">{t.form.email} <span class="required-mark">*</span></span>
+      <input
+        type="email"
+        name="email"
+        autocomplete="email"
+        inputmode="email"
+        placeholder={t.form.emailPlaceholder}
+        data-label={t.form.labels.email}
+        data-required-field
+        data-email-field
+        required
+      />
+      <span class="field-error" data-error-for="email"></span>
+    </label>
+
+    <label class="field">
+      <span class="field-label">{t.form.country} <span class="required-mark">*</span></span>
+      <input
+        type="text"
+        name="country"
+        autocomplete="country-name"
+        placeholder={t.form.countryPlaceholder}
+        data-label={t.form.labels.country}
+        data-required-field
+        required
+      />
+      <span class="field-error" data-error-for="country"></span>
+    </label>
+
+    <label class="field">
+      <span class="field-label">{t.form.interest}</span>
+      <span class="select-wrap">
+        <select name="interest" data-label={t.form.labels.interest}>
+          {t.form.interestOptions.map((option) => (
+            <option value={option.value} selected={option.value === defaultInterest}>{option.label}</option>
+          ))}
+        </select>
+        <Icon name="chevron-down" size={16} />
+      </span>
+    </label>
+
+    <label class="field">
+      <span class="field-label">{t.form.product}</span>
+      <span class="select-wrap">
+        <select name="product" data-label={t.form.labels.product}>
+          <option value="">{t.form.productPlaceholder}</option>
+          {products.map((item) => (
+            <option value={item.name[lang]} data-product-slug={item.slug} selected={product?.slug === item.slug}>
+              {item.name[lang]}
+            </option>
+          ))}
+        </select>
+        <Icon name="chevron-down" size={16} />
+      </span>
+    </label>
+
+    <label class="field field--full">
+      <span class="field-label">{t.form.message} <span class="required-mark">*</span></span>
+      <textarea
+        name="message"
+        rows="5"
+        placeholder={t.form.messagePlaceholder}
+        data-label={t.form.labels.message}
+        data-required-field
+        required
+      ></textarea>
+      <span class="field-error" data-error-for="message"></span>
+    </label>
+  </div>
+
+  <div class="consent-row">
+    <label class="checkbox-label">
+      <input type="checkbox" name="consent" data-consent-field required />
+      <span class="checkbox-visual" aria-hidden="true"><Icon name="check" size={12} strokeWidth={2.2} /></span>
+      <span>{t.form.consent}</span>
+    </label>
+    <a href={legalHref} class="consent-link">{t.form.consentLink}</a>
+    <span class="field-error field-error--consent" data-error-for="consent"></span>
+  </div>
+
+  <div class="form-actions">
+    <button class="button button--dark" type="submit">
+      {t.form.submit}
+      <Icon name="arrow-up-right" size={16} />
+    </button>
+    <p class="form-privacy">{t.form.privacyNote}</p>
+  </div>
+
+  <div class="form-status" role="status" aria-live="polite" data-form-status hidden>
+    <span class="form-status-icon" aria-hidden="true"><Icon name="check" size={18} /></span>
+    <div>
+      <p class="form-status-title" data-status-title></p>
+      <p>
+        <span data-status-text></span>
+        <a href={`mailto:${site.email}`}>{site.email}</a>
+      </p>
+    </div>
+  </div>
+
+  <input class="form-honeypot" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+</form>
+
+<script>
+  const forms = document.querySelectorAll<HTMLFormElement>('[data-inquiry-form]');
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const setError = (form: HTMLFormElement, field: HTMLElement, message: string) => {
+    field.classList.add('is-invalid');
+    const name = field.getAttribute('name') ?? '';
+    const error = form.querySelector<HTMLElement>(`[data-error-for="${name}"]`);
+    if (error) error.textContent = message;
+  };
+
+  const clearErrors = (form: HTMLFormElement) => {
+    form.querySelectorAll<HTMLElement>('.is-invalid').forEach((field) => field.classList.remove('is-invalid'));
+    form.querySelectorAll<HTMLElement>('[data-error-for]').forEach((error) => (error.textContent = ''));
+  };
+
+  forms.forEach((form) => {
+    const status = form.querySelector<HTMLElement>('[data-form-status]');
+    const statusTitle = form.querySelector<HTMLElement>('[data-status-title]');
+    const statusText = form.querySelector<HTMLElement>('[data-status-text]');
+    const requestedProduct = new URLSearchParams(window.location.search).get('product');
+    const productSelect = form.querySelector<HTMLSelectElement>('select[name="product"]');
+
+    if (requestedProduct && productSelect) {
+      const option = Array.from(productSelect.options).find(
+        (item) => (item as HTMLOptionElement).dataset.productSlug === requestedProduct
+      );
+      if (option) productSelect.value = (option as HTMLOptionElement).value;
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      clearErrors(form);
+
+      const get = (name: string) => form.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
+      const name = get('name');
+      const email = get('email');
+      const country = get('country');
+      const message = get('message');
+      const consent = form.querySelector<HTMLInputElement>('[data-consent-field]');
+      let firstInvalid: HTMLElement | null = null;
+
+      const requireField = (field: HTMLElement | null, label: string) => {
+        if (!field) return;
+        if (!(field as HTMLInputElement).value.trim()) {
+          setError(form, field, label);
+          firstInvalid ??= field;
+        }
+      };
+
+      requireField(name, form.dataset.required ?? '');
+      requireField(country, form.dataset.required ?? '');
+      requireField(message, form.dataset.required ?? '');
+
+      if (email && !email.value.trim()) {
+        setError(form, email, form.dataset.required ?? '');
+        firstInvalid ??= email;
+      } else if (email && !emailPattern.test(email.value.trim())) {
+        setError(form, email, form.dataset.emailError ?? '');
+        firstInvalid ??= email;
+      }
+
+      if (consent && !consent.checked) {
+        consent.classList.add('is-invalid');
+        const error = form.querySelector<HTMLElement>('[data-error-for="consent"]');
+        if (error) error.textContent = form.dataset.consentError ?? '';
+        firstInvalid ??= consent;
+      }
+
+      if (firstInvalid) {
+        firstInvalid.focus({ preventScroll: false });
+        return;
+      }
+
+      const data = new FormData(form);
+      const lines: string[] = [];
+      const add = (key: string, label: string) => {
+        const value = String(data.get(key) ?? '').trim();
+        if (value) lines.push(`${label}: ${value}`);
+      };
+
+      add('name', name?.dataset.label ?? 'Name');
+      add('company', get('company')?.dataset.label ?? 'Company');
+      add('email', email?.dataset.label ?? 'Email');
+      add('country', country?.dataset.label ?? 'Country');
+      const interest = get('interest') as HTMLSelectElement | null;
+      if (interest?.value) lines.push(`${interest.dataset.label ?? 'Interest'}: ${interest.options[interest.selectedIndex]?.text ?? ''}`);
+      add('product', get('product')?.dataset.label ?? 'Product');
+      lines.push('');
+      lines.push(`${message?.dataset.label ?? 'Message'}:`);
+      lines.push(message?.value.trim() ?? '');
+
+      const subject = encodeURIComponent(form.dataset.subject ?? 'PAWLY inquiry');
+      const body = encodeURIComponent(lines.join('\n'));
+      const mailto = `mailto:${form.dataset.contact ?? 'hello@pawly.example'}?subject=${subject}&body=${body}`;
+      window.location.href = mailto;
+
+      if (status && statusTitle && statusText) {
+        statusTitle.textContent = form.dataset.successTitle ?? '';
+        statusText.textContent = form.dataset.successText ?? '';
+        status.hidden = false;
+      }
+    });
+
+    form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input, textarea').forEach((field) => {
+      field.addEventListener('input', () => {
+        field.classList.remove('is-invalid');
+        const error = form.querySelector<HTMLElement>(`[data-error-for="${field.name}"]`);
+        if (error) error.textContent = '';
+      });
+    });
+  });
+</script>

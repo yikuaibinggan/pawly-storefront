@@ -1,0 +1,20 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-https://pawly.example.com}
+        PUBLIC_BASE_PATH: ${PUBLIC_BASE_PATH:-/}
+    image: pawly-web:latest
+    container_name: pawly-web
+    restart: unless-stopped
+    # 默认只监听本机，由宿主机 Nginx 负责 HTTPS 和域名。
+    # 如果这台机器只跑这一个站点，可改成 "80:80"。
+    ports:
+      - "127.0.0.1:8080:80"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

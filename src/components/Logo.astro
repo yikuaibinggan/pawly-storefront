@@ -1,0 +1,19 @@
+---
+import type { Lang } from '../data/site';
+import { withLang } from '../data/site';
+import Icon from './Icon.astro';
+
+interface Props {
+  lang: Lang;
+  class?: string;
+}
+
+const { lang, class: className = '' } = Astro.props;
+---
+
+<a class={`logo ${className}`} href={withLang(lang, '/')} aria-label={lang === 'zh' ? 'PAWLY 首页' : 'PAWLY home'}>
+  <span class="logo-mark">
+    <Icon name="paw" size={18} strokeWidth={1.9} />
+  </span>
+  <span class="logo-word">PAWLY<span>.</span></span>
+</a>

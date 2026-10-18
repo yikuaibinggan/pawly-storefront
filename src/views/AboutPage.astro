@@ -1,0 +1,200 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import Icon from '../components/Icon.astro';
+import { ui } from '../i18n/ui';
+import { asset, withLang, type Lang } from '../data/site';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = ui[lang];
+const a = t.about;
+const stats = t.home.story.stats;
+
+const aboutSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'AboutPage',
+  name: t.meta.about.title,
+  description: t.meta.about.description
+};
+---
+
+<BaseLayout lang={lang} title={t.meta.about.title} description={t.meta.about.description} structuredData={aboutSchema}>
+  <section class="about-hero">
+    <div class="container about-hero-grid">
+      <div class="about-hero-copy" data-reveal>
+        <p class="eyebrow"><span class="eyebrow-mark" aria-hidden="true"></span>{a.eyebrow}</p>
+        <h1>{a.title} <em>{a.accent}</em></h1>
+        <p class="page-lead">{a.text}</p>
+        <div class="about-hero-actions">
+          <a class="button button--dark" href={withLang(lang, '/products/')}>
+            {t.common.explore}
+            <Icon name="arrow-right" size={16} />
+          </a>
+          <a class="button button--ghost" href={withLang(lang, '/wholesale/')}>
+            {t.footer.wholesale}
+            <Icon name="arrow-up-right" size={16} />
+          </a>
+        </div>
+      </div>
+
+      <div class="about-hero-visual" data-reveal style="--delay:100ms">
+        <div class="about-hero-image">
+          <img
+            src={asset('/images/about-main.webp')}
+            alt={lang === 'zh' ? '趴在温暖台面上的金毛幼犬' : 'A golden retriever puppy resting on a warm surface'}
+            width="1200"
+            height="1500"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+          />
+        </div>
+        <div class="about-hero-caption">
+          <span class="about-caption-icon" aria-hidden="true"><Icon name="paw" size={17} /></span>
+          <span>{a.heroCaption}</span>
+        </div>
+        <div class="about-hero-small">
+          <img
+            src={asset('/images/story-home.webp')}
+            alt={lang === 'zh' ? '坐在石阶上的虎斑猫' : 'A tabby cat on warm stone steps'}
+            width="1200"
+            height="900"
+            loading="eager"
+            decoding="async"
+          />
+        </div>
+        <span class="about-doodle" aria-hidden="true"><Icon name="sparkle" size={30} /></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="about-stats" aria-label={lang === 'zh' ? '品牌数字' : 'PAWLY in numbers'}>
+    <div class="container about-stats-grid">
+      {stats.map((stat, index) => (
+        <div class="about-stat" data-reveal style={`--delay:${index * 80}ms`}>
+          <span class="about-stat-value">{stat.value}</span>
+          <span class="about-stat-label">{stat.label}</span>
+        </div>
+      ))}
+      <p class="about-stats-note">
+        {lang === 'zh'
+          ? '我们不追求把货架填满，只把每一件值得留下的东西做好。'
+          : 'We are not trying to fill a shelf. Just to make every piece worth keeping.'}
+      </p>
+    </div>
+  </section>
+
+  <section class="section about-intro">
+    <div class="container about-intro-grid">
+      <div class="about-intro-heading" data-reveal>
+        <p class="eyebrow"><span class="eyebrow-mark" aria-hidden="true"></span>{a.introEyebrow}</p>
+        <h2>{a.introTitle}</h2>
+      </div>
+      <div class="about-intro-copy" data-reveal style="--delay:100ms">
+        <p>{a.introParagraphOne}</p>
+        <p>{a.introParagraphTwo}</p>
+        <p class="about-signature">— {lang === 'zh' ? 'PAWLY 工作室' : 'The PAWLY studio'}</p>
+      </div>
+      <div class="about-intro-image" data-reveal style="--delay:160ms">
+        <img
+          src={asset('/images/story-care.webp')}
+          alt={lang === 'zh' ? '正在被梳理毛发的金毛犬' : 'A golden retriever being groomed'}
+          width="1200"
+          height="900"
+          loading="lazy"
+          decoding="async"
+        />
+        <span class="about-image-note">{lang === 'zh' ? '认真对待每一次接触' : 'Care in every touch'}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section about-values-section">
+    <div class="container">
+      <SectionHeading
+        eyebrow={a.valuesEyebrow}
+        title={a.valuesTitle}
+        align="center"
+        class="section-heading--light"
+      />
+      <div class="about-values-grid">
+        {a.values.map((value, index) => (
+          <article class="about-value-card" data-reveal style={`--delay:${index * 90}ms`}>
+            <span class="about-value-number">{value.number}</span>
+            <h3>{value.title}</h3>
+            <p>{value.text}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section about-process">
+    <div class="container">
+      <SectionHeading eyebrow={a.processEyebrow} title={a.processTitle} text={a.processText} />
+      <div class="process-grid">
+        {a.process.map((step, index) => (
+          <article class="process-step" data-reveal style={`--delay:${index * 70}ms`}>
+            <span class="process-number">{step.number}</span>
+            <span class="process-line" aria-hidden="true"></span>
+            <h3>{step.title}</h3>
+            <p>{step.text}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section about-materials">
+    <div class="container about-materials-grid">
+      <div class="about-materials-visual" data-reveal>
+        <img
+          src={asset('/images/about-detail.webp')}
+          alt={lang === 'zh' ? '在户外微笑的比格犬' : 'A beagle smiling outdoors'}
+          width="1000"
+          height="750"
+          loading="lazy"
+          decoding="async"
+        />
+        <span class="materials-stamp">{a.materialsCaption}</span>
+      </div>
+      <div class="about-materials-copy" data-reveal style="--delay:100ms">
+        <p class="eyebrow"><span class="eyebrow-mark" aria-hidden="true"></span>{a.materialsEyebrow}</p>
+        <h2>{a.materialsTitle}</h2>
+        <p>{a.materialsText}</p>
+        <ul class="check-list">
+          {a.materialsList.map((item) => (
+            <li>
+              <span class="check-icon" aria-hidden="true"><Icon name="check" size={13} strokeWidth={2.2} /></span>
+              {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="about-cta">
+    <div class="container about-cta-inner" data-reveal>
+      <div>
+        <p class="eyebrow eyebrow--light"><span class="eyebrow-mark" aria-hidden="true"></span>{a.ctaEyebrow}</p>
+        <h2>{a.ctaTitle}</h2>
+        <p>{a.ctaText}</p>
+      </div>
+      <div class="about-cta-actions">
+        <a class="button button--light" href={withLang(lang, '/products/')}>
+          {a.ctaPrimary}
+          <Icon name="arrow-right" size={16} />
+        </a>
+        <a class="button button--light-outline" href={withLang(lang, '/wholesale/')}>
+          {a.ctaSecondary}
+          <Icon name="arrow-up-right" size={16} />
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

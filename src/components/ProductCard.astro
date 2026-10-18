@@ -1,0 +1,66 @@
+---
+import { ui } from '../i18n/ui';
+import { getCategory, type Product } from '../data/products';
+import { productPath, type Lang } from '../data/site';
+import Icon from './Icon.astro';
+
+interface Props {
+  product: Product;
+  lang: Lang;
+  eager?: boolean;
+  index?: number;
+}
+
+const { product, lang, eager = false, index = 0 } = Astro.props;
+const t = ui[lang];
+const category = getCategory(product.category);
+const href = productPath(lang, product.slug);
+const image = product.images[0];
+const search = [
+  product.name[lang],
+  product.tagline[lang],
+  product.description[lang],
+  category.name[lang],
+  product.suitable[lang]
+]
+  .join(' ')
+  .toLowerCase();
+---
+
+<article
+  class="product-card"
+  data-reveal
+  data-product-card
+  data-category={product.category}
+  data-search={search}
+  style={`--delay:${Math.min(index, 6) * 60}ms`}
+>
+  <a class="product-card-media" href={href} aria-label={`${product.name[lang]} — ${t.common.viewDetails}`}>
+    <img
+      src={image.src}
+      alt={image.alt[lang]}
+      width="900"
+      height="1125"
+      loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
+    />
+    <span class="product-card-category">{category.short[lang]}</span>
+    {product.badge && <span class="badge product-card-badge">{product.badge[lang]}</span>}
+    <span class="product-card-arrow" aria-hidden="true"><Icon name="arrow-up-right" size={18} /></span>
+  </a>
+  <div class="product-card-body">
+    <div class="product-card-heading">
+      <h3><a href={href}>{product.name[lang]}</a></h3>
+      <span class="product-card-suitable">{product.suitable[lang]}</span>
+    </div>
+    <p>{product.tagline[lang]}</p>
+    <div class="product-card-foot">
+      <span class="product-card-moq">{t.products.moqShort} · {product.moq[lang]}</span>
+      <div class="swatches" aria-label={t.product.colorsTitle}>
+        {product.colors.map((color) => (
+          <span class="swatch" style={`--swatch:${color.hex}`} title={color.name[lang]}></span>
+        ))}
+      </div>
+    </div>
+  </div>
+</article>

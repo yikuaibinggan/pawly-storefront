@@ -1,0 +1,209 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import InquiryForm from '../components/InquiryForm.astro';
+import Icon from '../components/Icon.astro';
+import { ui } from '../i18n/ui';
+import { asset, site, withLang, type Lang } from '../data/site';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = ui[lang];
+const w = t.wholesale;
+const statIcons = ['box', 'sparkle', 'globe'] as const;
+const siteUrl = Astro.site ?? new URL(site.domain);
+const siteRoot = new URL(asset('/'), siteUrl);
+
+const wholesaleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: w.title,
+  description: w.text,
+  provider: {
+    '@type': 'Organization',
+    name: site.name,
+    url: siteRoot.href
+  },
+  areaServed: 'Worldwide'
+};
+---
+
+<BaseLayout lang={lang} title={t.meta.wholesale.title} description={t.meta.wholesale.description} structuredData={wholesaleSchema}>
+  <section class="wholesale-hero">
+    <div class="container wholesale-hero-grid">
+      <div class="wholesale-hero-copy" data-reveal>
+        <p class="eyebrow"><span class="eyebrow-mark" aria-hidden="true"></span>{w.eyebrow}</p>
+        <h1>{w.title} <em>{w.accent}</em></h1>
+        <p class="page-lead">{w.text}</p>
+        <div class="wholesale-hero-actions">
+          <a class="button button--dark" href="#inquiry">
+            {w.cta}
+            <Icon name="arrow-down" size={16} />
+          </a>
+          <a class="button button--ghost" href={withLang(lang, '/products/')}>
+            {w.secondaryCta}
+            <Icon name="arrow-right" size={16} />
+          </a>
+        </div>
+      </div>
+
+      <div class="wholesale-hero-visual" data-reveal style="--delay:100ms">
+        <img
+          src={asset('/images/wholesale.webp')}
+          alt={lang === 'zh' ? '窗边休息的橘猫' : 'An orange cat resting by a window'}
+          width="1400"
+          height="1000"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+        />
+        <span class="wholesale-hero-badge">
+          <Icon name="box" size={18} />
+          {lang === 'zh' ? '从样品到上市' : 'Sample to shelf'}
+        </span>
+        <div class="wholesale-hero-note">
+          <span class="wholesale-note-label">{lang === 'zh' ? '合作方式' : 'How we work'}</span>
+          <strong>OEM / ODM / Private label</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="wholesale-stats" aria-label={lang === 'zh' ? '合作优势' : 'Partnership highlights'}>
+    <div class="container wholesale-stats-grid">
+      {w.stats.map((stat, index) => (
+        <div class="wholesale-stat" data-reveal style={`--delay:${index * 80}ms`}>
+          <span class="wholesale-stat-icon" aria-hidden="true"><Icon name={statIcons[index]} size={22} /></span>
+          <strong>{stat.value}</strong>
+          <span>{stat.label}</span>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="section capabilities-section">
+    <div class="container">
+      <SectionHeading
+        eyebrow={w.capabilitiesEyebrow}
+        title={w.capabilitiesTitle}
+        text={w.capabilitiesText}
+      />
+      <div class="capability-grid">
+        {w.capabilities.map((capability, index) => (
+          <article class="capability-card" data-reveal style={`--delay:${index * 60}ms`}>
+            <span class="capability-number">{capability.number}</span>
+            <h3>{capability.title}</h3>
+            <p>{capability.text}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section process-section">
+    <div class="container">
+      <SectionHeading eyebrow={w.processEyebrow} title={w.processTitle} text={w.processText} />
+      <div class="wholesale-process-grid">
+        {w.process.map((step, index) => (
+          <article class="wholesale-process-step" data-reveal style={`--delay:${index * 70}ms`}>
+            <span class="wholesale-process-number">{step.number}</span>
+            <span class="wholesale-process-line" aria-hidden="true"></span>
+            <h3>{step.title}</h3>
+            <p>{step.text}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section customize-section">
+    <div class="container customize-grid">
+      <div class="customize-visual" data-reveal>
+        <img
+          src={asset('/images/story-trail.webp')}
+          alt={lang === 'zh' ? '一起奔跑的两只狗' : 'Two dogs running together'}
+          width="1200"
+          height="900"
+          loading="lazy"
+          decoding="async"
+        />
+        <span class="customize-stamp">
+          <Icon name="paw" size={18} />
+          {lang === 'zh' ? '你的品牌，你的细节' : 'Your brand, your details'}
+        </span>
+      </div>
+      <div class="customize-copy" data-reveal style="--delay:100ms">
+        <p class="eyebrow"><span class="eyebrow-mark" aria-hidden="true"></span>{w.customizeEyebrow}</p>
+        <h2>{w.customizeTitle}</h2>
+        <p>{w.customizeText}</p>
+        <div class="customize-chips">
+          {w.customizeItems.map((item) => <span>{item}</span>)}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section partner-section">
+    <div class="container">
+      <div class="partner-panel" data-reveal>
+        <div class="partner-panel-copy">
+          <p class="eyebrow eyebrow--light"><span class="eyebrow-mark" aria-hidden="true"></span>{w.partnerEyebrow}</p>
+          <h2>{w.partnerTitle}</h2>
+          <p>{w.partnerTextOne}</p>
+          <p>{w.partnerTextTwo}</p>
+        </div>
+        <div class="partner-panel-detail">
+          <span class="partner-mark" aria-hidden="true"><Icon name="paw" size={44} /></span>
+          <p>
+            {lang === 'zh'
+              ? '“把产品做好，是最直接的合作方式。”'
+              : '“Making the product right is the most direct way to work together.”'}
+          </p>
+          <span>{lang === 'zh' ? '— PAWLY 工作室' : '— The PAWLY studio'}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section faq-section">
+    <div class="container faq-grid">
+      <div class="faq-heading" data-reveal>
+        <p class="eyebrow"><span class="eyebrow-mark" aria-hidden="true"></span>{w.faqEyebrow}</p>
+        <h2>{w.faqTitle}</h2>
+        <p>{w.directLabel} <a href={`mailto:${site.email}`}>{site.email}</a></p>
+      </div>
+      <div class="faq-list" data-reveal style="--delay:100ms">
+        {w.faqs.map((faq) => (
+          <details class="faq-item">
+            <summary>
+              <span>{faq.question}</span>
+              <span class="faq-icon" aria-hidden="true"><Icon name="plus" size={18} /></span>
+            </summary>
+            <div class="faq-answer"><p>{faq.answer}</p></div>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="inquiry-section" id="inquiry">
+    <div class="container inquiry-grid">
+      <div class="inquiry-copy" data-reveal>
+        <p class="eyebrow"><span class="eyebrow-mark" aria-hidden="true"></span>{w.formEyebrow}</p>
+        <h2>{w.formTitle}</h2>
+        <p>{w.formText}</p>
+        <div class="inquiry-direct">
+          <span class="meta-label">{w.directLabel}</span>
+          <a href={`mailto:${site.email}`}>{site.email}</a>
+          <a href={site.whatsappHref} target="_blank" rel="noreferrer">{site.whatsappDisplay}</a>
+        </div>
+      </div>
+      <div class="inquiry-form-wrap" data-reveal style="--delay:100ms">
+        <InquiryForm lang={lang} variant="wholesale" />
+      </div>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,153 @@
+---
+import '@fontsource-variable/fraunces/wght.css';
+import '@fontsource-variable/fraunces/wght-italic.css';
+import '@fontsource-variable/manrope/wght.css';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { asset, site, withLang, type Lang } from '../data/site';
+
+interface Props {
+  lang: Lang;
+  title: string;
+  description: string;
+  image?: string;
+  noindex?: boolean;
+  bodyClass?: string;
+  structuredData?: Record<string, unknown> | Record<string, unknown>[];
+}
+
+const {
+  lang,
+  title,
+  description,
+  image = '/images/og-image.webp',
+  noindex = false,
+  bodyClass = '',
+  structuredData
+} = Astro.props;
+
+const t = lang === 'zh' ? 'zh-CN' : 'en';
+const siteUrl = Astro.site ?? new URL(site.domain);
+const homePath = asset('/');
+const zhHomePath = asset('/zh/');
+const siteRoot = new URL(homePath, siteUrl);
+const canonical = new URL(Astro.url.pathname, siteUrl);
+const enUrl = new URL(withLang('en', Astro.url.pathname), siteUrl);
+const zhUrl = new URL(withLang('zh', Astro.url.pathname), siteUrl);
+const imagePath = image.startsWith('http') ? image : asset(image);
+const imageUrl = new URL(imagePath, siteUrl);
+
+const organization = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: site.name,
+  legalName: site.legalName,
+  url: siteRoot.href,
+  logo: new URL(asset('/favicon.svg'), siteUrl).href,
+  email: site.email,
+  sameAs: site.socials.map((social) => social.href)
+};
+
+const extra = structuredData
+  ? Array.isArray(structuredData)
+    ? structuredData
+    : [structuredData]
+  : [];
+const schemas = [organization, ...extra];
+---
+
+<!doctype html>
+<html lang={t} data-home={homePath} data-home-zh={zhHomePath}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      try {
+        const savedLanguage = localStorage.getItem('pawly-lang');
+        const root = document.documentElement;
+        const homePath = root.dataset.home || '/';
+        const zhHomePath = root.dataset.homeZh || '/zh/';
+        const path = window.location.pathname;
+        if ((savedLanguage === 'en' || savedLanguage === 'zh') && (path === homePath || path === zhHomePath)) {
+          const target = savedLanguage === 'zh' ? zhHomePath : homePath;
+          if (path !== target) window.location.replace(target);
+        }
+      } catch {
+        // Language persistence is optional; the site still works without storage.
+      }
+    </script>
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical.href} />
+    <link rel="alternate" hreflang="en" href={enUrl.href} />
+    <link rel="alternate" hreflang="zh-CN" href={zhUrl.href} />
+    <link rel="alternate" hreflang="x-default" href={enUrl.href} />
+    <meta name="theme-color" content="#f7f2e8" />
+    <link rel="icon" type="image/svg+xml" href={asset('/favicon.svg')} />
+    {noindex && <meta name="robots" content="noindex,nofollow" />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical.href} />
+    <meta property="og:image" content={imageUrl.href} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content={lang === 'zh' ? 'zh_CN' : 'en_US'} />
+    <meta property="og:locale:alternate" content={lang === 'zh' ? 'en_US' : 'zh_CN'} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={imageUrl.href} />
+
+    <slot name="head" />
+    <script type="application/ld+json" set:html={JSON.stringify(schemas)} />
+  </head>
+  <body id="top" class:list={[`lang-${lang}`, bodyClass]}>
+    <a class="skip-link" href="#main">{lang === 'zh' ? '跳到主要内容' : 'Skip to content'}</a>
+    <Header lang={lang} />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <Footer lang={lang} />
+
+    <script>
+      document.querySelectorAll<HTMLElement>('[data-set-lang]').forEach((link) => {
+        link.addEventListener('click', () => {
+          const language = link.dataset.setLang;
+          if (language !== 'en' && language !== 'zh') return;
+          try {
+            localStorage.setItem('pawly-lang', language);
+          } catch {
+            // Storage may be unavailable in privacy modes.
+          }
+        });
+      });
+
+      const revealItems = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const revealAll = () => revealItems.forEach((item) => item.classList.add('is-visible'));
+
+      if (reduceMotion || !('IntersectionObserver' in window)) {
+        revealAll();
+      } else {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+              (entry.target as HTMLElement).classList.add('is-visible');
+              observer.unobserve(entry.target);
+            });
+          },
+          { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }
+        );
+        revealItems.forEach((item) => observer.observe(item));
+        window.addEventListener('beforeprint', revealAll);
+      }
+    </script>
+  </body>
+</html>

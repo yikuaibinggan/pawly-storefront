@@ -1,0 +1,206 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProductCard from '../components/ProductCard.astro';
+import Icon from '../components/Icon.astro';
+import { ui } from '../i18n/ui';
+import { categories, products } from '../data/products';
+import { asset, type Lang } from '../data/site';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = ui[lang];
+const p = t.products;
+const metaItems =
+  lang === 'zh'
+    ? [`${products.length} 件日常好物`, `${categories.length} 种生活场景`, '支持全球批发']
+    : [`${products.length} everyday essentials`, `${categories.length} daily routines`, 'Worldwide wholesale'];
+
+const collectionSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: p.title,
+  description: p.text,
+  hasPart: products.map((product) => ({
+    '@type': 'Product',
+    name: product.name[lang],
+    description: product.description[lang],
+    image: product.images[0].src,
+    brand: { '@type': 'Brand', name: 'PAWLY' }
+  }))
+};
+---
+
+<BaseLayout lang={lang} title={t.meta.products.title} description={t.meta.products.description} structuredData={collectionSchema}>
+  <div data-collection>
+  <section class="collection-hero">
+    <div class="container collection-hero-grid">
+      <div class="collection-hero-copy" data-reveal>
+        <p class="eyebrow"><span class="eyebrow-mark" aria-hidden="true"></span>{p.eyebrow}</p>
+        <h1>{p.title}</h1>
+        <p class="page-lead">{p.text}</p>
+        <div class="collection-meta">
+          {metaItems.map((item) => <span>{item}</span>)}
+        </div>
+      </div>
+
+      <div class="collection-hero-visual" data-reveal style="--delay:100ms">
+        <div class="collection-image-main">
+          <img
+            src={asset('/images/product-cloudnine-bed.webp')}
+            alt={lang === 'zh' ? '坐在温暖石阶上的虎斑猫' : 'A tabby cat sitting on warm stone steps'}
+            width="900"
+            height="1125"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+          />
+        </div>
+        <div class="collection-image-small">
+          <img
+            src={asset('/images/product-slowfeast-bowl.webp')}
+            alt={lang === 'zh' ? '装满狗粮的陶瓷慢食碗' : 'A ceramic slow feeder filled with kibble'}
+            width="900"
+            height="1125"
+            loading="eager"
+            decoding="async"
+          />
+        </div>
+        <span class="collection-stamp" aria-hidden="true">
+          <strong>{products.length}</strong>
+          <span>{lang === 'zh' ? '件日常好物' : 'everyday essentials'}</span>
+        </span>
+        <span class="collection-doodle" aria-hidden="true"><Icon name="paw" size={36} /></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section collection-section">
+    <div class="container">
+      <div class="filter-bar" data-filter-bar>
+        <div class="filter-chips" role="group" aria-label={p.filtersAria} data-filter-chips>
+          <button class="filter-chip is-active" type="button" data-filter="all">{p.all}</button>
+          {categories.map((category) => (
+            <button class="filter-chip" type="button" data-filter={category.id}>{category.name[lang]}</button>
+          ))}
+        </div>
+        <label class="search-field">
+          <span class="sr-only">{p.searchLabel}</span>
+          <Icon name="search" size={17} />
+          <input type="search" placeholder={p.searchPlaceholder} autocomplete="off" data-search-input />
+        </label>
+      </div>
+
+      <div class="collection-status">
+        <p aria-live="polite" aria-atomic="true">
+          <span data-result-count>{products.length}</span>
+          <span data-result-label>{p.results}</span>
+        </p>
+        <button class="text-button" type="button" data-clear-filters hidden>{p.clearFilters}</button>
+      </div>
+
+      <div class="product-grid" data-product-grid>
+        {products.map((product, index) => (
+          <ProductCard product={product} lang={lang} index={index} />
+        ))}
+      </div>
+
+      <div class="no-results" data-no-results hidden>
+        <span class="no-results-icon" aria-hidden="true"><Icon name="paw" size={30} /></span>
+        <p class="eyebrow">{p.emptyBadge}</p>
+        <h2>{p.noResultsTitle}</h2>
+        <p>{p.noResultsText}</p>
+        <button class="button button--dark" type="button" data-clear-filters>
+          {p.clearFilters}
+          <Icon name="arrow-right" size={16} />
+        </button>
+      </div>
+    </div>
+  </section>
+  </div>
+</BaseLayout>
+
+<script>
+  const collection = document.querySelector<HTMLElement>('[data-collection]');
+
+  if (collection) {
+    const cards = Array.from(collection.querySelectorAll<HTMLElement>('[data-product-card]'));
+    const chips = Array.from(collection.querySelectorAll<HTMLButtonElement>('[data-filter]'));
+    const searchInput = collection.querySelector<HTMLInputElement>('[data-search-input]');
+    const count = collection.querySelector<HTMLElement>('[data-result-count]');
+    const countLabel = collection.querySelector<HTMLElement>('[data-result-label]');
+    const clearButtons = Array.from(collection.querySelectorAll<HTMLButtonElement>('[data-clear-filters]'));
+    const noResults = collection.querySelector<HTMLElement>('[data-no-results]');
+    const plural = countLabel?.textContent ?? 'products';
+    const singular = plural.replace(/s$/, '');
+
+    let activeCategory = 'all';
+    let query = '';
+
+    const syncUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      if (activeCategory === 'all') params.delete('category');
+      else params.set('category', activeCategory);
+      const next = params.toString();
+      window.history.replaceState({}, '', `${window.location.pathname}${next ? `?${next}` : ''}${window.location.hash}`);
+    };
+
+    const applyFilters = () => {
+      const term = query.trim().toLowerCase();
+      let visible = 0;
+
+      cards.forEach((card) => {
+        const matchesCategory = activeCategory === 'all' || card.dataset.category === activeCategory;
+        const matchesSearch = !term || (card.dataset.search ?? '').includes(term);
+        const show = matchesCategory && matchesSearch;
+        card.classList.toggle('is-hidden', !show);
+        if (show) {
+          visible += 1;
+          card.classList.add('is-visible');
+        }
+      });
+
+      if (count) count.textContent = String(visible);
+      if (countLabel) countLabel.textContent = visible === 1 ? singular : plural;
+      if (noResults) noResults.hidden = visible !== 0;
+      clearButtons.forEach((button) => {
+        button.hidden = activeCategory === 'all' && !term;
+      });
+      syncUrl();
+    };
+
+    const setCategory = (category: string) => {
+      activeCategory = category;
+      chips.forEach((chip) => chip.classList.toggle('is-active', chip.dataset.filter === category));
+      applyFilters();
+    };
+
+    const fromUrl = new URLSearchParams(window.location.search).get('category');
+    if (fromUrl && chips.some((chip) => chip.dataset.filter === fromUrl)) {
+      activeCategory = fromUrl;
+      chips.forEach((chip) => chip.classList.toggle('is-active', chip.dataset.filter === fromUrl));
+    }
+
+    chips.forEach((chip) => {
+      chip.addEventListener('click', () => setCategory(chip.dataset.filter ?? 'all'));
+    });
+
+    searchInput?.addEventListener('input', () => {
+      query = searchInput.value;
+      applyFilters();
+    });
+
+    clearButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        query = '';
+        if (searchInput) searchInput.value = '';
+        setCategory('all');
+        searchInput?.focus();
+      });
+    });
+
+    applyFilters();
+  }
+</script>

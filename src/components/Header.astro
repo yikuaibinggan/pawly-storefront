@@ -1,0 +1,150 @@
+---
+import { ui } from '../i18n/ui';
+import { basePath, site, withLang, type Lang } from '../data/site';
+import Icon from './Icon.astro';
+import Logo from './Logo.astro';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = ui[lang];
+const currentPath = Astro.url.pathname;
+const pathWithoutBase =
+  basePath && (currentPath === basePath || currentPath.startsWith(`${basePath}/`))
+    ? currentPath.slice(basePath.length) || '/'
+    : currentPath;
+const normalizedPath = pathWithoutBase.replace(/^\/zh(?=\/|$)/, '') || '/';
+const navItems = [
+  { href: '/products/', label: t.common.products },
+  { href: '/about/', label: t.footer.about },
+  { href: '/wholesale/', label: t.footer.wholesale },
+  { href: '/contact/', label: t.footer.contact }
+];
+const isActive = (href: string) => (href === '/' ? normalizedPath === '/' : normalizedPath.startsWith(href));
+---
+
+<div class="announcement">
+  <div class="container announcement-inner">
+    <span class="announcement-pulse" aria-hidden="true"></span>
+    <p>{t.header.announcement}</p>
+    <a href={withLang(lang, '/products/')}>
+      {t.header.announcementLink}
+      <Icon name="arrow-right" size={14} />
+    </a>
+  </div>
+</div>
+
+<header class="site-header" data-header>
+  <div class="container header-inner">
+    <Logo lang={lang} />
+
+    <nav class="desktop-nav" aria-label={t.header.navLabel}>
+      {navItems.map((item) => (
+        <a
+          href={withLang(lang, item.href)}
+          class:list={['nav-link', { 'is-active': isActive(item.href) }]}
+          aria-current={isActive(item.href) ? 'page' : undefined}
+        >
+          {item.label}
+        </a>
+      ))}
+    </nav>
+
+    <div class="header-actions">
+      <LanguageSwitcher lang={lang} path={currentPath} />
+      <a class="button button--small button--dark header-quote" href={withLang(lang, '/wholesale/#inquiry')}>
+        {t.header.cta}
+        <Icon name="arrow-up-right" size={15} />
+      </a>
+      <button
+        class="menu-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+        aria-label={t.header.openMenu}
+        data-menu-toggle
+        data-open-label={t.header.openMenu}
+        data-close-label={t.header.closeMenu}
+      >
+        <Icon name="menu" size={24} />
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu" aria-hidden="true" inert data-mobile-menu>
+    <div class="mobile-menu-head">
+      <Logo lang={lang} />
+      <button class="menu-close" type="button" aria-label={t.header.closeMenu} data-menu-close>
+        <Icon name="close" size={24} />
+      </button>
+    </div>
+    <nav class="mobile-nav" aria-label={t.header.mobileNavLabel}>
+      {navItems.map((item, index) => (
+        <a
+          href={withLang(lang, item.href)}
+          class:list={['mobile-nav-link', { 'is-active': isActive(item.href) }]}
+          aria-current={isActive(item.href) ? 'page' : undefined}
+          style={`--i:${index}`}
+        >
+          <span>{item.label}</span>
+          <Icon name="arrow-up-right" size={20} />
+        </a>
+      ))}
+    </nav>
+    <div class="mobile-menu-foot">
+      <LanguageSwitcher lang={lang} path={currentPath} variant="mobile" />
+      <a class="button button--dark button--full" href={withLang(lang, '/wholesale/#inquiry')}>
+        {t.header.cta}
+        <Icon name="arrow-up-right" size={16} />
+      </a>
+      <div class="mobile-contact">
+        <a href={`mailto:${site.email}`}>{site.email}</a>
+        <a href={site.whatsappHref} target="_blank" rel="noreferrer">{site.whatsappDisplay}</a>
+      </div>
+    </div>
+</div>
+
+<script>
+  const header = document.querySelector<HTMLElement>('[data-header]');
+  const menu = document.querySelector<HTMLElement>('[data-mobile-menu]');
+  const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const menuClose = document.querySelector<HTMLButtonElement>('[data-menu-close]');
+
+  if (header) {
+    const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > 12);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+
+  if (header && menu && toggle) {
+    const openLabel = toggle.dataset.openLabel ?? 'Open menu';
+    const closeLabel = toggle.dataset.closeLabel ?? 'Close menu';
+
+    const setOpen = (open: boolean) => {
+      header.classList.toggle('menu-open', open);
+      menu.classList.toggle('is-open', open);
+      menu.setAttribute('aria-hidden', String(!open));
+      menu.toggleAttribute('inert', !open);
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? closeLabel : openLabel);
+      document.body.classList.toggle('menu-is-open', open);
+    };
+
+    toggle.addEventListener('click', () => setOpen(!header.classList.contains('menu-open')));
+    menuClose?.addEventListener('click', () => setOpen(false));
+    menu.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setOpen(false)));
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') setOpen(false);
+    });
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 960) setOpen(false);
+    });
+  }
+
+  const currentYear = document.querySelector('[data-current-year]');
+  if (currentYear) currentYear.textContent = String(new Date().getFullYear());
+</script>

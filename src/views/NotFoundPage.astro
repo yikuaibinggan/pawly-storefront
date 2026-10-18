@@ -1,0 +1,35 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import { ui } from '../i18n/ui';
+import { withLang, type Lang } from '../data/site';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = ui[lang];
+const n = t.notFound;
+---
+
+<BaseLayout lang={lang} title={t.meta.notFound.title} description={t.meta.notFound.description} noindex>
+  <section class="not-found">
+    <div class="container not-found-inner" data-reveal>
+      <span class="not-found-paw" aria-hidden="true"><Icon name="paw" size={64} /></span>
+      <p class="not-found-code">{n.eyebrow}</p>
+      <h1>{n.title}</h1>
+      <p>{n.text}</p>
+      <div class="not-found-actions">
+        <a class="button button--dark" href={withLang(lang, '/')}>
+          {n.primary}
+          <Icon name="arrow-right" size={16} />
+        </a>
+        <a class="button button--ghost" href={withLang(lang, '/products/')}>
+          {n.secondary}
+          <Icon name="arrow-up-right" size={16} />
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

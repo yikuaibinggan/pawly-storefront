@@ -1,0 +1,39 @@
+---
+import Icon from './Icon.astro';
+
+interface Props {
+  eyebrow: string;
+  title: string;
+  accent?: string;
+  text?: string;
+  link?: string;
+  linkLabel?: string;
+  align?: 'left' | 'center';
+  class?: string;
+}
+
+const {
+  eyebrow,
+  title,
+  accent,
+  text,
+  link,
+  linkLabel,
+  align = 'left',
+  class: className = ''
+} = Astro.props;
+---
+
+<div class:list={['section-heading', `section-heading--${align}`, className]} data-reveal>
+  <p class="eyebrow"><span class="eyebrow-mark" aria-hidden="true"></span>{eyebrow}</p>
+  <div class="section-heading-row">
+    <h2>{title}{accent && <> <em>{accent}</em></>}</h2>
+    {link && linkLabel && (
+      <a class="text-link section-heading-link" href={link}>
+        {linkLabel}
+        <Icon name="arrow-up-right" size={16} />
+      </a>
+    )}
+  </div>
+  {text && <p class="section-heading-text">{text}</p>}
+</div>

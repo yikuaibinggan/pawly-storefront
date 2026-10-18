@@ -1,0 +1,101 @@
+---
+import { ui } from '../i18n/ui';
+import { categories } from '../data/products';
+import { site, withLang, type Lang } from '../data/site';
+import Icon from './Icon.astro';
+import Logo from './Logo.astro';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = ui[lang];
+const currentPath = Astro.url.pathname;
+const socialIcons = {
+  Instagram: 'instagram',
+  TikTok: 'tiktok',
+  LinkedIn: 'linkedin'
+} as const;
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-cta" data-reveal>
+      <div>
+        <p class="eyebrow">{t.footer.ctaTitle}</p>
+        <p class="footer-cta-text">{t.footer.ctaText}</p>
+      </div>
+      <a class="button button--light" href={withLang(lang, '/contact/')}>
+        {t.footer.ctaButton}
+        <Icon name="arrow-up-right" size={16} />
+      </a>
+    </div>
+
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <Logo lang={lang} />
+        <p>{t.footer.intro}</p>
+        <div class="footer-socials">
+          {site.socials.map((social) => (
+            <a href={social.href} target="_blank" rel="noreferrer" aria-label={`${social.label} (${t.common.opensInNewTab})`}>
+              <Icon name={socialIcons[social.label]} size={18} />
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <div class="footer-column">
+        <h2>{t.footer.shopHeading}</h2>
+        <ul>
+          <li><a href={withLang(lang, '/products/')}>{t.footer.allProducts}</a></li>
+          {categories.map((category) => (
+            <li>
+              <a href={withLang(lang, `/products/?category=${category.id}`)}>{category.name[lang]}</a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h2>{t.footer.companyHeading}</h2>
+        <ul>
+          <li><a href={withLang(lang, '/about/')}>{t.footer.about}</a></li>
+          <li><a href={withLang(lang, '/wholesale/')}>{t.footer.wholesale}</a></li>
+          <li><a href={withLang(lang, '/contact/')}>{t.footer.contact}</a></li>
+          <li><a href={withLang(lang, '/legal/')}>{t.footer.legal}</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column footer-contact">
+        <h2>{t.footer.contactHeading}</h2>
+        <a href={`mailto:${site.email}`}>{site.email}</a>
+        <a href={site.whatsappHref} target="_blank" rel="noreferrer">{site.whatsappDisplay}</a>
+        <p>{site.address[lang]}</p>
+        <h3>{t.footer.followHeading}</h3>
+        <div class="footer-social-text">
+          {site.socials.map((social) => (
+            <a href={social.href} target="_blank" rel="noreferrer">
+              {social.label}
+              <Icon name="arrow-up-right" size={12} />
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>{t.footer.copyright.replace('2026', String(year))}</p>
+      <div class="footer-bottom-actions">
+        <a href={withLang(lang, '/legal/')}>{t.footer.legal}</a>
+        <LanguageSwitcher lang={lang} path={currentPath} variant="footer" />
+        <a class="back-to-top" href="#top">
+          {t.common.backToTop}
+          <Icon name="arrow-up-right" size={14} />
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>

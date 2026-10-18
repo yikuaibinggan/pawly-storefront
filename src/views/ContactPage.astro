@@ -1,0 +1,123 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import InquiryForm from '../components/InquiryForm.astro';
+import Icon from '../components/Icon.astro';
+import { ui } from '../i18n/ui';
+import { asset, site, withLang, type Lang } from '../data/site';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = ui[lang];
+const c = t.contact;
+const socialIcons = {
+  Instagram: 'instagram',
+  TikTok: 'tiktok',
+  LinkedIn: 'linkedin'
+} as const;
+const siteUrl = Astro.site ?? new URL(site.domain);
+const siteRoot = new URL(asset('/'), siteUrl);
+
+const contactSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'ContactPage',
+  name: t.meta.contact.title,
+  description: t.meta.contact.description,
+  mainEntity: {
+    '@type': 'Organization',
+    name: site.name,
+    email: site.email,
+    url: siteRoot.href
+  }
+};
+---
+
+<BaseLayout lang={lang} title={t.meta.contact.title} description={t.meta.contact.description} structuredData={contactSchema}>
+  <section class="contact-hero">
+    <div class="container contact-hero-grid">
+      <div class="contact-hero-copy" data-reveal>
+        <p class="eyebrow"><span class="eyebrow-mark" aria-hidden="true"></span>{c.eyebrow}</p>
+        <h1>{c.title}</h1>
+        <p class="page-lead">{c.text}</p>
+
+        <div class="contact-methods">
+          <a class="contact-method" href={`mailto:${site.email}`}>
+            <span class="contact-method-icon" aria-hidden="true"><Icon name="mail" size={21} /></span>
+            <span>
+              <span class="meta-label">{c.emailLabel}</span>
+              <strong>{site.email}</strong>
+            </span>
+            <Icon name="arrow-up-right" size={16} />
+          </a>
+          <a class="contact-method" href={site.whatsappHref} target="_blank" rel="noreferrer">
+            <span class="contact-method-icon" aria-hidden="true"><Icon name="whatsapp" size={21} /></span>
+            <span>
+              <span class="meta-label">{c.whatsappLabel}</span>
+              <strong>{site.whatsappDisplay}</strong>
+            </span>
+            <Icon name="arrow-up-right" size={16} />
+          </a>
+        </div>
+      </div>
+
+      <div class="contact-hero-visual" data-reveal style="--delay:100ms">
+        <img
+          src={asset('/images/contact.webp')}
+          alt={lang === 'zh' ? '在户外微笑的比格犬' : 'A beagle smiling outdoors'}
+          width="1200"
+          height="900"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+        />
+        <div class="contact-hero-card">
+          <span class="contact-card-icon" aria-hidden="true"><Icon name="heart" size={20} /></span>
+          <div>
+            <strong>{c.responseTitle}</strong>
+            <p>{c.responseText}</p>
+          </div>
+        </div>
+        <span class="contact-doodle" aria-hidden="true"><Icon name="paw" size={34} /></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section contact-form-section" id="inquiry">
+    <div class="container contact-form-grid">
+      <div class="contact-form-copy" data-reveal>
+        <p class="eyebrow"><span class="eyebrow-mark" aria-hidden="true"></span>{c.formEyebrow}</p>
+        <h2>{c.formTitle}</h2>
+        <p>{c.formText}</p>
+
+        <div class="contact-details">
+          <div>
+            <span class="meta-label">{c.studioLabel}</span>
+            <p>{site.address[lang]}</p>
+          </div>
+          <div>
+            <span class="meta-label">{c.socialLabel}</span>
+            <div class="contact-socials">
+              {site.socials.map((social) => (
+                <a href={social.href} target="_blank" rel="noreferrer">
+                  <Icon name={socialIcons[social.label]} size={16} />
+                  {social.label}
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <p class="contact-wholesale-link">
+          {c.faqLink}
+          <a href={withLang(lang, '/wholesale/')}>{c.faqCta} <Icon name="arrow-up-right" size={14} /></a>
+        </p>
+      </div>
+
+      <div class="inquiry-form-wrap" data-reveal style="--delay:100ms">
+        <InquiryForm lang={lang} variant="general" />
+      </div>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,347 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import ProductCard from '../components/ProductCard.astro';
+import Icon from '../components/Icon.astro';
+import { ui } from '../i18n/ui';
+import { categories, featuredProducts, getProduct } from '../data/products';
+import { asset, productPath, site, withLang, type Lang } from '../data/site';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = ui[lang];
+const h = t.home;
+const heroProduct = getProduct('cloudstep-harness')!;
+const heroProductHref = productPath(lang, heroProduct.slug);
+const categoryImages = categories.map((category) => ({
+  ...category,
+  href: withLang(lang, `/products/?category=${category.id}`)
+}));
+const valueIcons = ['heart', 'sparkle', 'leaf'] as const;
+const siteUrl = Astro.site ?? new URL(site.domain);
+const siteRoot = new URL(asset('/'), siteUrl);
+
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: site.name,
+  url: siteRoot.href,
+  inLanguage: ['en', 'zh-CN']
+};
+---
+
+<BaseLayout
+  lang={lang}
+  title={t.meta.home.title}
+  description={t.meta.home.description}
+  structuredData={websiteSchema}
+>
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-copy" data-reveal>
+        <p class="eyebrow"><span class="eyebrow-mark" aria-hidden="true"></span>{h.hero.eyebrow}</p>
+        <h1>{h.hero.title} <em>{h.hero.accent}</em></h1>
+        <p class="hero-text">{h.hero.text}</p>
+        <div class="hero-actions">
+          <a class="button button--dark" href={withLang(lang, '/products/')}>
+            {h.hero.primaryCta}
+            <Icon name="arrow-right" size={17} />
+          </a>
+          <a class="button button--ghost" href={withLang(lang, '/wholesale/')}>
+            {h.hero.secondaryCta}
+            <Icon name="arrow-up-right" size={16} />
+          </a>
+        </div>
+        <p class="hero-note"><Icon name="paw" size={16} />{h.hero.note}</p>
+      </div>
+
+      <div class="hero-visual" data-reveal style="--delay:120ms">
+        <div class="hero-blob" aria-hidden="true"></div>
+        <div class="hero-image-wrap">
+          <div class="hero-image-clip">
+            <img
+              src={asset('/images/hero-pawly.webp')}
+              alt={lang === 'zh' ? '叼着玫瑰的金毛犬' : 'A golden retriever holding a rose'}
+              width="1600"
+              height="2000"
+              loading="eager"
+              fetchpriority="high"
+              decoding="async"
+            />
+          </div>
+          <div class="hero-orbit" aria-hidden="true">
+            <svg viewBox="0 0 160 160">
+              <defs>
+                <path id="hero-orbit-path" d="M80,80 m-60,0 a60,60 0 1,1 120,0 a60,60 0 1,1 -120,0" />
+              </defs>
+              <text>
+                <textPath href="#hero-orbit-path">{h.hero.orbit}</textPath>
+              </text>
+            </svg>
+            <span class="hero-orbit-center"><Icon name="paw" size={25} /></span>
+          </div>
+        </div>
+
+        <a class="hero-product-card" href={heroProductHref}>
+          <span class="hero-product-thumb">
+            <img
+              src={heroProduct.images[0].src}
+              alt={heroProduct.images[0].alt[lang]}
+              width="900"
+              height="1125"
+              loading="eager"
+              decoding="async"
+            />
+          </span>
+          <span class="hero-product-copy">
+            <span class="hero-product-label">{h.hero.cardLabel}</span>
+            <strong>{h.hero.cardName}</strong>
+            <span>{h.hero.cardMeta}</span>
+          </span>
+          <span class="hero-product-arrow" aria-hidden="true"><Icon name="arrow-up-right" size={16} /></span>
+        </a>
+
+        <span class="hero-doodle" aria-hidden="true"><Icon name="sparkle" size={34} /></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="trust-strip" aria-label={lang === 'zh' ? '我们的承诺' : 'Our promises'}>
+    <div class="container trust-grid">
+      {h.trust.map((item, index) => (
+        <div class="trust-item" data-reveal style={`--delay:${index * 80}ms`}>
+          <span class="trust-icon" aria-hidden="true">
+            <Icon name={index === 0 ? 'shield' : index === 1 ? 'sparkle' : 'heart'} size={21} />
+          </span>
+          <div>
+            <h2>{item.title}</h2>
+            <p>{item.text}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="section category-section">
+    <div class="container">
+      <SectionHeading
+        eyebrow={h.categories.eyebrow}
+        title={h.categories.title}
+        text={h.categories.text}
+        link={withLang(lang, '/products/')}
+        linkLabel={h.categories.cta}
+      />
+      <div class="category-grid">
+        {categoryImages.map((category, index) => (
+          <a
+            class="category-card"
+            href={category.href}
+            style={`--accent:${category.accent}; --delay:${index * 80}ms`}
+            data-reveal
+          >
+            <span class="category-image">
+              <img
+                src={category.image}
+                alt={category.alt[lang]}
+                width="900"
+                height="1125"
+                loading="lazy"
+                decoding="async"
+              />
+              <span class="category-number">{category.number}</span>
+            </span>
+            <span class="category-info">
+              <span class="category-title-row">
+                <span class="category-name">{category.name[lang]}</span>
+                <span class="category-arrow" aria-hidden="true"><Icon name="arrow-up-right" size={17} /></span>
+              </span>
+              <span class="category-description">{category.description[lang]}</span>
+              <span class="category-cta">{h.categories.cardCta}</span>
+            </span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section bestseller-section">
+    <div class="container">
+      <SectionHeading
+        eyebrow={h.bestsellers.eyebrow}
+        title={h.bestsellers.title}
+        text={h.bestsellers.text}
+        link={withLang(lang, '/products/')}
+        linkLabel={h.bestsellers.cta}
+      />
+      <div class="product-grid product-grid--featured">
+        {featuredProducts.map((product, index) => (
+          <ProductCard product={product} lang={lang} index={index} />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section story-section">
+    <div class="container story-grid">
+      <div class="story-visual" data-reveal>
+        <img
+          class="story-image-main"
+          src={asset('/images/story-home.webp')}
+          alt={lang === 'zh' ? '坐在温暖石阶上的虎斑猫' : 'A tabby cat sitting on warm stone steps'}
+          width="1200"
+          height="900"
+          loading="lazy"
+          decoding="async"
+        />
+        <img
+          class="story-image-small"
+          src={asset('/images/story-trail.webp')}
+          alt={lang === 'zh' ? '两只狗在小径上奔跑' : 'Two dogs running together on a trail'}
+          width="1200"
+          height="900"
+          loading="lazy"
+          decoding="async"
+        />
+        <span class="story-stamp" aria-hidden="true">
+          <Icon name="paw" size={20} />
+          <span>PAWLY<br />GOOD DAYS</span>
+        </span>
+      </div>
+
+      <div class="story-copy" data-reveal style="--delay:100ms">
+        <p class="eyebrow"><span class="eyebrow-mark" aria-hidden="true"></span>{h.story.eyebrow}</p>
+        <h2>{h.story.title}</h2>
+        <p>{h.story.paragraphOne}</p>
+        <p>{h.story.paragraphTwo}</p>
+        <ul class="check-list">
+          {h.story.points.map((point) => (
+            <li>
+              <span class="check-icon" aria-hidden="true"><Icon name="check" size={13} strokeWidth={2.2} /></span>
+              <span><strong>{point.title}</strong> — {point.text}</span>
+            </li>
+          ))}
+        </ul>
+        <div class="story-stats">
+          {h.story.stats.map((stat) => (
+            <div class="story-stat">
+              <span class="story-stat-value">{stat.value}</span>
+              <span class="story-stat-label">{stat.label}</span>
+            </div>
+          ))}
+        </div>
+        <a class="text-link" href={withLang(lang, '/about/')}>
+          {h.story.cta}
+          <Icon name="arrow-up-right" size={16} />
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section values-section">
+    <div class="container">
+      <SectionHeading
+        eyebrow={h.values.eyebrow}
+        title={h.values.title}
+        align="center"
+        class="section-heading--light"
+      />
+      <div class="values-grid">
+        {h.values.cards.map((card, index) => (
+          <article class="value-card" data-reveal style={`--delay:${index * 90}ms`}>
+            <span class="value-icon" aria-hidden="true"><Icon name={valueIcons[index]} size={24} /></span>
+            <span class="value-number">0{index + 1}</span>
+            <h3>{card.title}</h3>
+            <p>{card.text}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section wholesale-section">
+    <div class="container">
+      <div class="wholesale-panel" data-reveal>
+        <div class="wholesale-copy">
+          <p class="eyebrow eyebrow--light"><span class="eyebrow-mark" aria-hidden="true"></span>{h.wholesale.eyebrow}</p>
+          <h2>{h.wholesale.title}</h2>
+          <p>{h.wholesale.text}</p>
+          <ul class="check-list check-list--light">
+            {h.wholesale.points.map((point) => (
+              <li>
+                <span class="check-icon" aria-hidden="true"><Icon name="check" size={13} strokeWidth={2.2} /></span>
+                {point}
+              </li>
+            ))}
+          </ul>
+          <a class="button button--light" href={withLang(lang, '/wholesale/')}>
+            {h.wholesale.cta}
+            <Icon name="arrow-up-right" size={16} />
+          </a>
+        </div>
+        <div class="wholesale-visual">
+          <img
+            src={asset('/images/wholesale.webp')}
+            alt={lang === 'zh' ? '窗边休息的橘猫' : 'An orange cat resting by a window'}
+            width="1400"
+            height="1000"
+            loading="lazy"
+            decoding="async"
+          />
+          <span class="wholesale-badge">{h.wholesale.imageBadge}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section gallery-section">
+    <div class="container">
+      <SectionHeading
+        eyebrow={h.gallery.eyebrow}
+        title={h.gallery.title}
+        link={site.socials[0].href}
+        linkLabel={h.gallery.handle}
+      />
+      <div class="gallery-grid">
+        {[
+          { src: asset('/images/story-home.webp'), alt: lang === 'zh' ? '坐在石阶上的猫' : 'A cat on stone steps', caption: h.gallery.captions[0], wide: false },
+          { src: asset('/images/story-rest.webp'), alt: lang === 'zh' ? '在被子下睡觉的猫' : 'A cat sleeping under a duvet', caption: h.gallery.captions[2], wide: true },
+          { src: asset('/images/story-trail.webp'), alt: lang === 'zh' ? '一起奔跑的两只狗' : 'Two dogs running together', caption: h.gallery.captions[1], wide: false }
+        ].map((item, index) => (
+          <a
+            class:list={['gallery-item', { 'gallery-item--wide': item.wide }]}
+            href={site.socials[0].href}
+            target="_blank"
+            rel="noreferrer"
+            data-reveal
+            style={`--delay:${index * 80}ms`}
+          >
+            <img src={item.src} alt={item.alt} width="1200" height="900" loading="lazy" decoding="async" />
+            <span class="gallery-caption">{item.caption}<Icon name="arrow-up-right" size={14} /></span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="home-cta">
+    <div class="container home-cta-inner" data-reveal>
+      <span class="home-cta-paw home-cta-paw--one" aria-hidden="true"><Icon name="paw" size={80} /></span>
+      <span class="home-cta-paw home-cta-paw--two" aria-hidden="true"><Icon name="paw" size={48} /></span>
+      <h2>{h.cta.title}</h2>
+      <p class="home-cta-text">{h.cta.text}</p>
+      <div class="home-cta-actions">
+        <a class="button button--light" href={withLang(lang, '/contact/')}>
+          {h.cta.primary}
+          <Icon name="arrow-up-right" size={16} />
+        </a>
+        <a class="button button--light-outline" href={withLang(lang, '/products/')}>
+          {h.cta.secondary}
+          <Icon name="arrow-right" size={16} />
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,287 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import ProductCard from '../components/ProductCard.astro';
+import Icon from '../components/Icon.astro';
+import { ui } from '../i18n/ui';
+import { getCategory, products, type Product } from '../data/products';
+import { site, withLang, type Lang } from '../data/site';
+
+interface Props {
+  lang: Lang;
+  product: Product;
+}
+
+const { lang, product } = Astro.props;
+const t = ui[lang];
+const p = t.product;
+const category = getCategory(product.category);
+const categoryHref = withLang(lang, `/products/?category=${category.id}`);
+const inquiryHref = `${withLang(lang, '/wholesale/')}?product=${product.slug}#inquiry`;
+const sampleHref = `${withLang(lang, '/contact/')}?product=${product.slug}#inquiry`;
+const related = [
+  ...products.filter((item) => item.category === product.category && item.slug !== product.slug),
+  ...products.filter((item) => item.category !== product.category)
+].slice(0, 3);
+const siteUrl = Astro.site ?? new URL(site.domain);
+
+const productSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: product.name[lang],
+  description: product.description[lang],
+  image: product.images.map((image) => new URL(image.src, siteUrl).href),
+  sku: product.slug,
+  category: category.name[lang],
+  brand: { '@type': 'Brand', name: site.name },
+  additionalProperty: product.specs[lang].map((spec) => ({
+    '@type': 'PropertyValue',
+    name: spec.label,
+    value: spec.value
+  }))
+};
+---
+
+<BaseLayout
+  lang={lang}
+  title={`${product.name[lang]} — PAWLY`}
+  description={product.description[lang]}
+  image={product.images[0].src}
+  structuredData={productSchema}
+>
+  <div class="product-page">
+    <section class="product-hero-section">
+      <div class="container">
+        <Breadcrumbs
+          label={lang === 'zh' ? '面包屑' : 'Breadcrumb'}
+          items={[
+            { label: p.breadcrumbHome, href: withLang(lang, '/') },
+            { label: p.breadcrumbProducts, href: withLang(lang, '/products/') },
+            { label: product.name[lang] }
+          ]}
+        />
+
+        <div class="product-hero">
+          <div class="product-gallery" data-gallery>
+            <div class="product-gallery-main">
+              <img
+                src={product.images[0].src}
+                alt={product.images[0].alt[lang]}
+                width="900"
+                height="1125"
+                loading="eager"
+                fetchpriority="high"
+                decoding="async"
+                data-gallery-main
+              />
+              <span class="product-gallery-counter">
+                <span data-gallery-counter>01</span> / {String(product.images.length).padStart(2, '0')}
+              </span>
+              {product.badge && <span class="badge product-gallery-badge">{product.badge[lang]}</span>}
+            </div>
+
+            <div class="product-gallery-thumbs" role="group" aria-label={p.galleryLabel}>
+              {product.images.map((image, index) => (
+                <button
+                  class:list={['product-thumb', { 'is-active': index === 0 }]}
+                  type="button"
+                  data-gallery-thumb
+                  data-src={image.src}
+                  data-alt={image.alt[lang]}
+                  data-index={String(index + 1).padStart(2, '0')}
+                  aria-label={`${p.thumbnailLabel} ${index + 1}`}
+                  aria-pressed={index === 0 ? 'true' : 'false'}
+                >
+                  <img src={image.src} alt="" width="300" height="375" loading="lazy" decoding="async" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div class="product-info" data-reveal style="--delay:100ms">
+            <div class="product-kicker">
+              <a class="product-category-link" href={categoryHref}>{category.name[lang]}</a>
+              <span class="product-kicker-divider" aria-hidden="true"></span>
+              <span>{product.suitable[lang]}</span>
+            </div>
+
+            <h1>{product.name[lang]}</h1>
+            <p class="product-tagline">{product.tagline[lang]}</p>
+            <p class="product-description">{product.description[lang]}</p>
+
+            <div class="product-meta-grid">
+              <div>
+                <span class="meta-label">{p.suitableLabel}</span>
+                <strong>{product.suitable[lang]}</strong>
+              </div>
+              <div>
+                <span class="meta-label">{p.moqLabel}</span>
+                <strong>{product.moq[lang]}</strong>
+              </div>
+            </div>
+
+            <div class="product-colors">
+              <span class="meta-label">{p.colorsTitle}</span>
+              <div class="color-list">
+                {product.colors.map((color) => (
+                  <span class="color-item">
+                    <span class="swatch" style={`--swatch:${color.hex}`}></span>
+                    {color.name[lang]}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div class="product-actions">
+              <a class="button button--dark" href={inquiryHref}>
+                {p.inquire}
+                <Icon name="arrow-up-right" size={16} />
+              </a>
+              <a class="button button--ghost" href={sampleHref}>
+                {p.requestSample}
+                <Icon name="arrow-right" size={16} />
+              </a>
+            </div>
+
+            <p class="product-shipping-note"><Icon name="box" size={16} />{p.shippingNote}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section product-details-section">
+      <div class="container">
+        <SectionHeading eyebrow={p.detailsEyebrow} title={p.detailsTitle} text={p.detailsText} />
+        <div class="product-details-grid">
+          <div class="product-features" data-reveal>
+            <h3>{p.featuresTitle}</h3>
+            <ol class="feature-list">
+              {product.features[lang].map((feature, index) => (
+                <li>
+                  <span class="feature-number">{String(index + 1).padStart(2, '0')}</span>
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div class="product-specs" data-reveal style="--delay:80ms">
+            <h3>{p.specsTitle}</h3>
+            <dl class="spec-list">
+              {product.specs[lang].map((spec) => (
+                <div>
+                  <dt>{spec.label}</dt>
+                  <dd>{spec.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <div class="product-care" data-reveal style="--delay:160ms">
+            <span class="product-care-icon" aria-hidden="true"><Icon name="leaf" size={24} /></span>
+            <h3>{p.careTitle}</h3>
+            <p>{product.care[lang]}</p>
+            <a class="text-link" href={categoryHref}>
+              {p.categoryLink}
+              <Icon name="arrow-up-right" size={15} />
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="product-editorial">
+      <div class="container product-editorial-grid">
+        <div class="product-editorial-image" data-reveal>
+          <img
+            src={product.images[1].src}
+            alt={product.images[1].alt[lang]}
+            width="1200"
+            height="900"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+        <div class="product-editorial-copy" data-reveal style="--delay:100ms">
+          <span class="quote-mark" aria-hidden="true"><Icon name="quote" size={34} /></span>
+          <blockquote>{category.description[lang]}</blockquote>
+          <p>{p.shippingNote}</p>
+          <a class="text-link" href={categoryHref}>
+            {p.categoryLink}
+            <Icon name="arrow-up-right" size={15} />
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section related-section">
+      <div class="container">
+        <SectionHeading
+          eyebrow={p.relatedEyebrow}
+          title={p.relatedTitle}
+          text={p.relatedText}
+          link={withLang(lang, '/products/')}
+          linkLabel={t.common.viewAll}
+        />
+        <div class="product-grid product-grid--three">
+          {related.map((item, index) => (
+            <ProductCard product={item} lang={lang} index={index} />
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section class="product-inquire">
+      <div class="container product-inquire-inner" data-reveal>
+        <div>
+          <p class="eyebrow eyebrow--light"><span class="eyebrow-mark" aria-hidden="true"></span>{p.moqLabel}</p>
+          <h2>{p.inquire}</h2>
+          <p>{p.shippingNote}</p>
+        </div>
+        <div class="product-inquire-actions">
+          <a class="button button--light" href={inquiryHref}>
+            {t.common.getQuote}
+            <Icon name="arrow-up-right" size={16} />
+          </a>
+          <a class="button button--light-outline" href={withLang(lang, '/products/')}>
+            {p.backToProducts}
+            <Icon name="arrow-right" size={16} />
+          </a>
+        </div>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  const gallery = document.querySelector<HTMLElement>('[data-gallery]');
+
+  if (gallery) {
+    const main = gallery.querySelector<HTMLImageElement>('[data-gallery-main]');
+    const counter = gallery.querySelector<HTMLElement>('[data-gallery-counter]');
+    const thumbs = Array.from(gallery.querySelectorAll<HTMLButtonElement>('[data-gallery-thumb]'));
+
+    thumbs.forEach((thumb) => {
+      thumb.addEventListener('click', () => {
+        if (!main || !counter) return;
+        const src = thumb.dataset.src;
+        const alt = thumb.dataset.alt;
+        if (!src || !alt) return;
+
+        main.classList.add('is-changing');
+        window.setTimeout(() => {
+          main.src = src;
+          main.alt = alt;
+          main.classList.remove('is-changing');
+        }, 120);
+
+        thumbs.forEach((item) => {
+          item.classList.toggle('is-active', item === thumb);
+          item.setAttribute('aria-pressed', String(item === thumb));
+        });
+        counter.textContent = thumb.dataset.index ?? '01';
+      });
+    });
+  }
+</script>
